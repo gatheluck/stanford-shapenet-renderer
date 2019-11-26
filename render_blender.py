@@ -26,6 +26,8 @@ parser.add_argument('--color_depth', type=str, default='8',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='PNG',
                     help='Format of files generated. Either PNG or OPEN_EXR')
+parser.add_argument('--resolution', type=int, default=400, 
+                    help='Rendering resolution of each image.')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
@@ -137,8 +139,8 @@ def parent_obj_to_camera(b_camera):
 
 
 scene = bpy.context.scene
-scene.render.resolution_x = 600
-scene.render.resolution_y = 600
+scene.render.resolution_x = args.resolution
+scene.render.resolution_y = args.resolution
 scene.render.resolution_percentage = 100
 scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
