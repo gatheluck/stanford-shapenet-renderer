@@ -151,8 +151,18 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
-model_identifier = os.path.split(os.path.split(args.obj)[0])[1]
-fp = os.path.join(args.output_folder, model_identifier, model_identifier)
+# In ShapeNetCore.v2, .obj file exists under like,
+# 'ShapeNetCore.v2/02691156/fff513f407e00e85a9ced22d91ad7027/models/model_normalized.obj'
+# - class_id of above .obj file should be '02691156'
+# - model_id of above .obj file should be 'fff513f407e00e85a9ced22d91ad7027'
+class_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(args.obj))))
+model_id = os.path.basename(os.path.dirname(os.path.dirname(args.obj)))
+
+
+
+
+
+fp = os.path.join(args.output_folder, model_id)
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
 from math import radians
@@ -166,7 +176,17 @@ for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
 for i in range(0, args.views):
     print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
 
-    scene.render.filepath = fp + '_r_{0:03d}'.format(int(i * stepsize))
+    # output for kaolin dataloader 
+    # dataset/images/02946921/fff09483.../rendering/00.png
+    #                                              /01.png
+    #                                              /02.png
+    #                                              ...
+    #                                              /rendering_metadata.txt
+    #                        /bde28170.../
+    #               /04530566/
+    #               ...
+
+    scene.render.filepath = fp + '_r_{0:02d}'.format(int(i))
     depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
     normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
     albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
