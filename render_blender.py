@@ -8,7 +8,7 @@
 import argparse, sys, os
 
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
-parser.add_argument('--views', type=int, default=30,
+parser.add_argument('--views', type=int, default=24,
                     help='number of views to be rendered')
 parser.add_argument('obj', type=str,
                     help='Path to the obj file to be rendered.')
@@ -26,7 +26,7 @@ parser.add_argument('--color_depth', type=str, default='8',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='PNG',
                     help='Format of files generated. Either PNG or OPEN_EXR')
-parser.add_argument('--resolution', type=int, default=400, 
+parser.add_argument('--resolution', type=int, default=256, 
                     help='Rendering resolution of each image.')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
@@ -183,11 +183,22 @@ for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
 for i in range(0, args.views):
     print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
 
-    scene.render.filepath = fp + '{0:02d}'.format(int(i))
-    depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
-    normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
-    albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
+    scene.render.filepath = os.path.join(fp, '{0:02d}'.format(int(i)))
+    depth_file_output.file_slots[0].path  = scene.render.filepath + "_depth"
+    normal_file_output.file_slots[0].path = scene.render.filepath + "_normal"
+    albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo"
 
     bpy.ops.render.render(write_still=True)  # render still
+
+    # rename depth, normal, albedo
+    # output file name is like '00_albedo_0001.png'
+    # change the name from '00_albedo_0001.png' to '00_albedo.png'
+    for name in ['depth', 'normal', 'albedo']:
+        current_path = scene.render.filepath + '_' + name + '0001.png'
+        new_path = scene.render.filepath + '_' + name + '.png'
+        os.rename(current_path, new_path)
+
+    # create mask
+    # depth_img = np.array(Image.open(os.path.join(args.dir, path, path+'_r_{0:03d}'.format(int(i*stepsize))+'_depth.png0001.png')))
 
     b_empty.rotation_euler[2] += radians(stepsize)
