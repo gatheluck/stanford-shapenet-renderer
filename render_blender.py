@@ -151,18 +151,25 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
-# In ShapeNetCore.v2, .obj file exists under like,
+# In ShapeNetCore.v2, .obj file exists under,
 # 'ShapeNetCore.v2/02691156/fff513f407e00e85a9ced22d91ad7027/models/model_normalized.obj'
 # - class_id of above .obj file should be '02691156'
 # - model_id of above .obj file should be 'fff513f407e00e85a9ced22d91ad7027'
 class_id = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(args.obj))))
 model_id = os.path.basename(os.path.dirname(os.path.dirname(args.obj)))
 
+# dataset for kaolin dataloader should be like,
+#
+# dataset/images/02946921/fff09483.../rendering/00.png
+#                                              /01.png
+#                                              /02.png
+#                                              ...
+#                                              /rendering_metadata.txt
+#                        /bde28170.../
+#               /04530566/
+#               ...
 
-
-
-
-fp = os.path.join(args.output_folder, model_id)
+fp = os.path.join(args.output_folder, class_id, model_id, 'rendering')
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
 from math import radians
@@ -176,17 +183,7 @@ for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
 for i in range(0, args.views):
     print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
 
-    # output for kaolin dataloader 
-    # dataset/images/02946921/fff09483.../rendering/00.png
-    #                                              /01.png
-    #                                              /02.png
-    #                                              ...
-    #                                              /rendering_metadata.txt
-    #                        /bde28170.../
-    #               /04530566/
-    #               ...
-
-    scene.render.filepath = fp + '_r_{0:02d}'.format(int(i))
+    scene.render.filepath = fp + '{0:02d}'.format(int(i))
     depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
     normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
     albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
