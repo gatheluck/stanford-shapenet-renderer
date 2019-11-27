@@ -24,7 +24,6 @@ args = parser.parse_args()
 
 target_path = os.path.join(args.dir, '**', '??.png')
 path_list = glob.glob(target_path, recursive=True)
-print(path_list)
 
 if len(path_list)==0:
     raise ValueError('specified directory does not include depth image')
