@@ -4,8 +4,9 @@
 # Example:
 # blender --background --python mytest.py -- --views 10 /path/to/my.obj
 #
-
-import argparse, sys, os
+import os
+import sys
+import argparse
 
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('--views', type=int, default=24,
@@ -52,6 +53,7 @@ for n in tree.nodes:
 # Create input render layer node.
 render_layers = tree.nodes.new('CompositorNodeRLayers')
 
+# depth
 depth_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 depth_file_output.label = 'Depth Output'
 if args.format == 'OPEN_EXR':
@@ -68,12 +70,14 @@ else:
 
   links.new(map.outputs[0], depth_file_output.inputs[0])
 
+# scale
 scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
 scale_normal.blend_type = 'MULTIPLY'
 # scale_normal.use_alpha = True
 scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
 links.new(render_layers.outputs['Normal'], scale_normal.inputs[1])
 
+# normal
 bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
 bias_normal.blend_type = 'ADD'
 # bias_normal.use_alpha = True
@@ -84,6 +88,7 @@ normal_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 normal_file_output.label = 'Normal Output'
 links.new(bias_normal.outputs[0], normal_file_output.inputs[0])
 
+# albedo
 albedo_file_output = tree.nodes.new(type="CompositorNodeOutputFile")
 albedo_file_output.label = 'Albedo Output'
 links.new(render_layers.outputs['Color'], albedo_file_output.inputs[0])
@@ -197,8 +202,5 @@ for i in range(0, args.views):
         current_path = scene.render.filepath + '_' + name + '0001.png'
         new_path = scene.render.filepath + '_' + name + '.png'
         os.rename(current_path, new_path)
-
-    # create mask
-    # depth_img = np.array(Image.open(os.path.join(args.dir, path, path+'_r_{0:03d}'.format(int(i*stepsize))+'_depth.png0001.png')))
 
     b_empty.rotation_euler[2] += radians(stepsize)
