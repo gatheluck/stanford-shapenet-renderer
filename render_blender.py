@@ -177,7 +177,7 @@ model_id = os.path.basename(os.path.dirname(os.path.dirname(args.obj)))
 fp = os.path.join(args.output_folder, class_id, model_id, 'rendering')
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
-from math import radians
+import math
 
 stepsize = 360.0 / args.views
 rotation_mode = 'XYZ'
@@ -185,22 +185,34 @@ rotation_mode = 'XYZ'
 for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
     output_node.base_path = ''
 
-for i in range(0, args.views):
-    print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
+# create rendering_metadata
+# each line of 'rendering_metadata.txt' should be includes
+# azimuth, elevation, in-plane rotation, distance, the field of view
+# ref: https://github.com/chrischoy/3D-R2N2/issues/12
+meta_path = os.path.join(fp, 'rendering_metadata.txt')
+with open(meta_path, 'w') as f:
 
-    scene.render.filepath = os.path.join(fp, '{0:02d}'.format(int(i)))
-    depth_file_output.file_slots[0].path  = scene.render.filepath + "_depth"
-    normal_file_output.file_slots[0].path = scene.render.filepath + "_normal"
-    albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo"
+    for i in range(0, args.views):
+        print("Rotation {}, {}".format((stepsize * i), math.radians(stepsize * i)))
+        
+        azimuth   = float(stepsize * i)
+        elevation = float(math.degrees(math.atan(cam.location[2]/cam.location[1])))
+        distance  = float(math.sqrt(sum((xi) ** 2.0 for xi in cam.location)))
+        f.write('{} {} {} {} {}\n'.format(azimuth, elevation, 0, distance, 25))
 
-    bpy.ops.render.render(write_still=True)  # render still
+        scene.render.filepath = os.path.join(fp, '{0:02d}'.format(int(i)))
+        depth_file_output.file_slots[0].path  = scene.render.filepath + "_depth"
+        normal_file_output.file_slots[0].path = scene.render.filepath + "_normal"
+        albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo"
 
-    # rename depth, normal, albedo
-    # output file name is like '00_albedo_0001.png'
-    # change the name from '00_albedo_0001.png' to '00_albedo.png'
-    for name in ['depth', 'normal', 'albedo']:
-        current_path = scene.render.filepath + '_' + name + '0001.png'
-        new_path = scene.render.filepath + '_' + name + '.png'
-        os.rename(current_path, new_path)
+        bpy.ops.render.render(write_still=True)  # render still
 
-    b_empty.rotation_euler[2] += radians(stepsize)
+        # rename depth, normal, albedo
+        # output file name is like '00_albedo_0001.png'
+        # change the name from '00_albedo_0001.png' to '00_albedo.png'
+        for name in ['depth', 'normal', 'albedo']:
+            current_path = scene.render.filepath + '_' + name + '0001.png'
+            new_path = scene.render.filepath + '_' + name + '.png'
+            os.rename(current_path, new_path)
+
+        b_empty.rotation_euler[2] += math.radians(stepsize)
