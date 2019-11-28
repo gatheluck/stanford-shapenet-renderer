@@ -33,7 +33,7 @@ for img_path in path_list:
     img = np.array(Image.open(img_path).split()[-1])
     
     mask = Image.fromarray(img).convert('L')
-    mask_path = '_'.join([img_path.rsplit('_', 1)[0], 'mask.png'])
+    mask_path = '_'.join([os.path.splitext(img_path)[0], 'mask.png'])
     mask.save(mask_path, cmap='gray')
 
     bar.update(1)
